@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}
+SQL Part 1
+{% endblock %}
+
+{% block body %}
+<blockquote>
+    <h3>Part 1: Create a Table</h3>
+    <b>Example:</b></br>
+    <i>create table my_table(</i></br>
+    <i>name varchar(50),</i></br>
+    <i>high_score integer,</i></br>
+    <i>story text);</i></br>
+    <p>Note: <b>Key</b>, <b>constraint</b>, <b>index</b>, and <b>schema</b> designation not supported. Multiple statements or syntactic sugar such as <b>CREATE ... AS SELECT</b> not supported.</br></p>
+
+    Type your create statement here:</br>
+    <form id = "sqlboxcreate" action = "{{ url_for('part_two') }}" method = "POST">
+        <textarea id = "createstmntid" name = "createstatement" rows = "10" cols = "50" ></textarea></br>
+        <input type = "submit" value = "Submit to DB">
+    </form>
+    <!--weird 404 when I try to src = external .js file-->
+    <script type="text/javascript">
+        document.getElementById("sqlboxcreate").onsubmit = function() {
+            var crSql = document.getElementById("createstmntid").value.toLowerCase().trim();
+            var wordArr = crSql.split(/[\n\r\s]+/);
+            var wordLen = wordArr.length;
+
+            //null assignments are breaking some things. Need to fix with (more) try catches
+            //must add dictionary compare for column definiton syntax
+            if (wordLen < 5) {
+                alert("Statement appears incomplete");
+                return false;
+            } else if (wordArr[0] != "create") {
+                alert("Statement must start with CREATE");
+                return false;
+            } else if (wordArr[1] != "table") {
+                alert("TABLE keyword must follow CREATE");
+                return false;
+            } else if (wordCounter("create", wordArr, wordLen) > 1 || wordCounter("table", wordArr, wordLen) > 1 ) {
+                alert("More than 1 reserved keyword(s): CREATE or TABLE");
+                return false;
+            } else if (
+                      wordCounter("select", wordArr, wordLen) > 0 ||
+                      wordCounter("insert", wordArr, wordLen) > 0 ||
+                      wordCounter("delete", wordArr, wordLen) > 0 ||
+                      wordCounter("update", wordArr, wordLen) > 0 ||
+                      wordCounter("drop", wordArr, wordLen) > 0 ||
+                      wordCounter("key", wordArr, wordLen) > 0 ||
+                      wordCounter("index", wordArr, wordLen) > 0
+                      ) {
+                alert("Detected keyword(s) indicating unsupported functionality");
+                return false;
+            } else if (!wordArr[2].endsWith("(") && wordArr[3] != "(" && !wordArr[3].startsWith("(")) {
+                alert("Opening paranthesis appears misplaced or missing");
+                return false;
+            } else if (charCounter("\\(",crSql) != charCounter("\\)",crSql)) {
+                alert("Hanging paranthesis");
+                return false;
+            } else if (hasSpclChar(crSql) == true) {
+                alert("Remove special character(s): ~`#$%^&-[]/{}|\":?");
+                return false;
+            } else if (charCounter("\\.",crSql) > 0) {
+                alert("\".\" detected; you may be attempting to reference a schema (not supported)");
+                return false;
+            } else if (!crSql.endsWith(";")) {
+                alert("Must end statement with \";\"");
+                return false;
+            } else {
+                return true;
+            }
+        };
+    </script>
+</blockquote>
+{% endblock %}

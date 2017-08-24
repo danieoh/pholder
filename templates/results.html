@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+SQL Guide Completed
+{% endblock %}
+
+{% block body %}
+<blockquote>
+
+<p>
+   <h3>Guide Complete, Data Retrieved Below</h3>
+</p>
+
+{% for resLp in render_res %}
+   {% for key, value in resLp.items() %}
+      <b>{{ key + ":" }}</b>
+      {{ value }} </br>
+   {% endfor %}
+   </br>
+{% endfor %}
+<!--{{ render_res }}-->
+
+</blockquote>
+{% endblock %}
