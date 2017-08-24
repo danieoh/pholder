@@ -1,0 +1,1 @@
+create table my_table(  name varchar(50),  high_score integer,  story text);

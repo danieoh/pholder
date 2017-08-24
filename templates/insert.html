@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}
+SQL Part 2
+{% endblock %}
+
+{% block body %}
+<blockquote>
+    <h3>Part 2: Insert rows to Table</h3>
+    <b>Example:</b></br>
+    <i>insert into my_table (name, high_score, story)</i></br>
+    <i>values ('Vanilla ICE', 100, 'I did console cheats'),</i></br>
+    <i>('MC Hammer', 89, 'HAMMER TIME');</i></br>
+    <p>
+    Note: only hardcoded <b>INSERT ... VALUES</b> supported. <b>INSERT ... SELECT</b> and similar queries not supported.</br>
+    </p>
+    Type your insert statement here:</br>
+    <form id = "sqlboxinsert" action = "{{ url_for('part_three') }}" method = "POST">
+        <textarea id = "insertformid" name = "insertstmnt" rows = "10" cols = "50" ></textarea></br>
+        <input type = "submit" value = "Submit to DB">
+    </form>
+    <form id = "viewDDLbutton">
+        <input type = "submit" value = "View Last DDL">
+    </form>
+    <!--weird 404 when I try to src = external .js file.-->
+    <script type="text/javascript">
+        document.getElementById("sqlboxinsert").onsubmit = function() {
+            var inSql = document.getElementById("insertformid").value.toLowerCase().trim();
+            var wordArr = inSql.split(/[\n\r\s]+/);
+            var wordLen = wordArr.length;
+
+            //THE BELOW VALIDATIONS ARE VERY REDUNDANT. CAN REFACTOR TO BE DYNAMIC BASED ON KEYWORD (E.G. INSERT vs CREATE vs SELECT)
+            if (wordArr[0] != "insert") {
+                alert("Statement must start with INSERT");
+                return false;
+            } else if (wordArr[1] != "into") {
+                alert("INTO keyword must follow INSERT");
+                return false;
+            } else if (wordLen < 5) {
+                alert("Statement appears incomplete");
+                return false;
+            } else if (
+                      wordCounter("insert", wordArr, wordLen) > 1 ||
+                      wordCounter("into", wordArr, wordLen) > 1 ||
+                      wordCounter("values", wordArr, wordLen) > 1 ||
+                      wordCounter("select", wordArr, wordLen) > 0 ||
+                      wordCounter("create", wordArr, wordLen) > 0 ||
+                      wordCounter("delete", wordArr, wordLen) > 0 ||
+                      wordCounter("update", wordArr, wordLen) > 0 ||
+                      wordCounter("drop", wordArr, wordLen) > 0
+                      ) {
+                alert("Detected an excess of keyword(s) (e.g. INSERT, VALUES, SELECT); you may be attempting unsupported functionality or multiple statements");
+                return false;
+            } else if (charCounter("\\(",inSql) != charCounter("\\)",inSql)) {
+                alert("Hanging paranthesis");
+                return false;
+            } else if (hasSpclChar(inSql) == true) {
+                alert("Remove special character(s): ~`#$%^&-[]/{}|\":?");
+                return false;
+            } else if (charCounter("\\.",inSql) > 0) {
+                alert("\".\" detected; you may be attempting to reference a schema (not supported)");
+                return false;
+            } else if (!inSql.endsWith(";")) {
+                alert("Must end statement with \";\"");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+    <!--display the ddl when user clicks the 2nd submit button to view. code is redundant. Can be reused-->
+    {% with jireturn_ddl = return_ddl %}
+        {% if jireturn_ddl %}
+            <!--hidden div workaround due to unexpected token error when passing from flask to js-->
+            <div style = "display: none;" id = "divjireturn_ddl"> {{ jireturn_ddl|safe }} </div>
+            <script type = "text/javascript">
+                document.getElementById("viewDDLbutton").onsubmit = function() {
+                    var ddl_alert = document.getElementById("divjireturn_ddl").innerHTML;
+                    alert(ddl_alert);
+                    return false;
+                }
+            </script>
+        {% endif %}
+    {% endwith %}
+</blockquote>
+{% endblock %}

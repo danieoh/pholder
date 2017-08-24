@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>
+            {% block title %}
+            {% endblock %}
+        </title>
+        <!--catch and display any generic errors. ridiculous work arounds in place-->
+        {% with jierror = error %}
+            {% if jierror %}
+                <div style = "display: none;" id = "divjierror"> {{ jierror|safe }} </div>
+                <script type = "text/javascript">
+                    function other_traceback() {
+                        var tback_err = document.getElementById("divjierror").innerHTML.toLowerCase(); //returns inside of div tag as string
+                        if (tback_err.includes("table") && tback_err.includes("already") && tback_err.includes("exists")) {
+                            alert("Table already exists, choose a different table name");
+                        } else if (tback_err.includes("no such table")) {
+                            alert("Table does not exist, view the last ddl");
+                        } else {
+                            alert(tback_err); //add more interpretation later
+                        }
+                    }
+                    other_traceback();
+                </script>
+            {% endif %}
+        {% endwith %}
+        <!--weird 404 when I try to src = external .js files-->
+        <script type="text/javascript">
+            function wordCounter(matchWord,matchWrdArr,wordLen) {
+                var wct = 0;
+                for (var wlp = 0; wlp < wordLen; wlp++) {
+                    if (matchWrdArr[wlp] == matchWord) {
+                        wct++;
+                    }
+                }
+                return wct;
+            }
+
+            function charCounter(matchChar,matchString) {
+                var chRgxp = new RegExp(matchChar,"gi"); //global insensitive in regex constructor
+                try {
+                    var chct = matchString.match(chRgxp).length;
+                    return chct;
+                }
+                catch(err) {
+                    return 0;
+                }//basically null or undefined handling
+            }
+
+            function hasSpclChar(checkSpcString) {
+                var badChar = new RegExp(/[~`#$%\^&\-\[\]/{}|\\":\?]/);
+                return badChar.test(checkSpcString); //.test returns true if match, false if none
+            }
+        </script>
+    </head>
+    <body>
+        <h1>
+            Interactive SQL Guide
+        </h1>
+        <p>This guide has three parts:</p>
+        <ol>
+          <li><b>Create:</b> create a table.</li>
+          <li><b>Insert:</b> insert some values into the table you created. </li>
+          <li><b>Select:</b> select records from the table you created. </li>
+        </ol>
+        <p>
+           If known errors are detected upon submitting a statement, JavaScript displays hints. On a successful submit, the SQL is passed to Python and executed on a SQLite database. Upon exiting the browser, or completing the guide, any tables created will be dropped from the database.
+        </p>
+        <p><i>Dev admits to the following issues: code is terribly redundant and should be parameterized. Actual hinting is limited. Tables write to main db-- should be created in a randomly named in-memory temp db for flow and user control. Really ugly front end and presentation.</i></p>
+        {% block body %}
+        {% endblock %}
+        <p>
+        ----------delete-everything-button-below-----------
+        <form id = "resetAll" action = "{{ url_for('part_one') }}" method = "POST">
+            <input type = "submit" value = "Reset Everything">
+        </form>
+        </p>
+        <!-- are you sure? -->
+        <script type = "text/javascript">
+            document.getElementById("resetAll").onsubmit = function() {
+                var decision = confirm("Drop all tables and go back to part one?")
+                if (decision){
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        </script>
+    </body>
+</html>

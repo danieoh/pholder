@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+
+{% block title %}
+SQL Part 3
+{% endblock %}
+
+{% block body %}
+<blockquote>
+    <h3>Part 3: Select Inserted Rows</h3>
+    <b>Example:</b></br>
+    <i>select name, story from my_table where name = 'MC Hammer';</i></br>
+    <p>
+    Note: only <b>SELECT ... FROM ... WHERE</b> keywords supported. <b>Group by, join, and/or nested select</b> not supported. </br>
+    </p>
+    Type your select statement here:</br>
+    <form id = "sqlboxselect" action = "{{ url_for('part_four') }}" method = "POST">
+        <textarea id = "selectformid" name = "selectstmnt" rows = "10" cols = "50" ></textarea></br>
+        <input type = "submit" value = "Submit to DB">
+    </form>
+    <form id = "viewDDLbutton">
+        <input type = "submit" value = "View Last DDL">
+    </form>
+    <script type="text/javascript">
+        document.getElementById("sqlboxselect").onsubmit = function() {
+            var slSql = document.getElementById("selectformid").value.toLowerCase().trim();
+            var wordArr = slSql.split(/[\n\r\s]+/);
+            var wordLen = wordArr.length;
+
+            if (wordArr[0] != "select") {
+                alert("Statement must start with SELECT");
+                return false;
+            } else if (wordCounter("select", wordArr, wordLen) > 1) {
+                alert("More than one SELECT keyword. Nested select unsupported.");
+                return false;
+            } else if (wordCounter("from", wordArr, wordLen) != 1) {
+                alert("FROM keyword missing or in excess. FROM should precede given table name");
+                return false;
+            } else if (wordCounter("where", wordArr, wordLen) > 1) {
+                alert("More than one WHERE keyword.");
+                return false;
+            } else if (
+                      //later make escapes for string literal in this and insert
+                      wordCounter("insert", wordArr, wordLen) > 0 ||
+                      wordCounter("into", wordArr, wordLen) > 0 ||
+                      wordCounter("create", wordArr, wordLen) > 0 ||
+                      wordCounter("delete", wordArr, wordLen) > 0 ||
+                      wordCounter("update", wordArr, wordLen) > 0 ||
+                      wordCounter("group", wordArr, wordLen) > 0 ||
+                      wordCounter("join", wordArr, wordLen) > 0 ||
+                      wordCounter("with", wordArr, wordLen) > 0 ||
+                      wordCounter("drop", wordArr, wordLen) > 0
+                      ) {
+                alert("Detected unsupported keyword(s) (e.g. DROP, GROUP BY, JOIN ...)");
+                return false;
+            } else if (charCounter("\\(",slSql) != charCounter("\\)",slSql)) {
+                alert("Hanging paranthesis");
+                return false;
+            } else if (hasSpclChar(slSql) == true) {
+                alert("Remove special character(s): ~`#$%^&-[]/{}|\":?");
+                return false;
+            } else if (charCounter("\\.",slSql) > 0) {
+                alert("\".\" detected; you may be attempting to reference a schema (not supported)");
+                return false;
+            } else if (!slSql.endsWith(";")) {
+                alert("Must end statement with \";\"");
+                return false;
+            } else {
+                return true;
+            }
+        }
+    </script>
+    <!--display the ddl when user clicks the 2nd submit button to view. code is redundant. This is redundant-->
+    {% with jireturn_ddl = return_ddl %}
+        {% if jireturn_ddl %}
+            <!--hidden div workaround due to unexpected token error when passing from flask to js-->
+            <div style = "display: none;" id = "divjireturn_ddl"> {{ jireturn_ddl|safe }} </div>
+            <script type = "text/javascript">
+                document.getElementById("viewDDLbutton").onsubmit = function() {
+                    var ddl_alert = document.getElementById("divjireturn_ddl").innerHTML;
+                    alert(ddl_alert);
+                    return false;
+                }
+            </script>
+        {% endif %}
+    {% endwith %}
+</blockquote>
+{% endblock %}
